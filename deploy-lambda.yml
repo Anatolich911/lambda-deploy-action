@@ -1,0 +1,50 @@
+name: Deploy Lambda
+
+on:
+  workflow_call:
+    inputs:
+      environment:
+        required: true
+        type: string
+      aws-account:
+        required: true
+        type: string
+      node-version:
+        required: true
+        type: string
+      
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js ${{ inputs.node-version }}
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ inputs.node-version }}
+
+    - name: Configure AWS Credentials
+      id: aws_auth
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        role-to-assume: arn:aws:iam::${{ inputs.aws-account }}:role/Lambda-deploy 
+        aws-region: us-east-1
+    
+    - name: Install Dependencies
+      run: npm install
+
+    - name: serverless deploy
+      uses: serverless/github-action@v3.2
+      with:
+        args: deploy --stage ${{ inputs.environment }}
+      env: # https://github.com/serverless/github-action
+        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
+
+    # - name: Zip Lambda functions
+    #   run: zip -j ${{matrix.lambda}}.zip ./${{matrix.lambda}}/index.js
+    # - name: Update Lambdas code
+    #   run: aws lambda update-function-code --function-name=${{matrix.lambda}}${{inputs.environment}} --zip-file=fileb://${{matrix.lambda}}.zip
