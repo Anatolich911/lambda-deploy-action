@@ -1,50 +1,50 @@
-name: Deploy Lambda
-
 on:
   workflow_call:
     inputs:
-      environment:
-        required: true
-        type: string
-      aws-account:
-        required: true
-        type: string
-      node-version:
-        required: true
-        type: string
-      
+        environment:
+            required: true
+            type: string
+        aws-account:
+            required: true
+            type: string
+        
+name: Deploy Lambda
+
 jobs:
-  deploy:
+  build:
+    name: Build Lambda
     runs-on: ubuntu-latest
 
+  
+    permissions:
+      contents: read
+      id-token: write
+  
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v4
+      - name: Checkout Repo  
+        uses: actions/checkout@v4
+  
+      # https://github.com/actions/setup-java/blob/main/docs/advanced-usage.md#publishing-using-apache-maven
+      - name: Setup Java (GraalVM)
+        uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '21'
+          distribution: 'graalvm-community'
+          cache: maven
 
-    - name: Setup Node.js ${{ inputs.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ inputs.node-version }}
+      - name: Build and Package
+        run: mvn clean -Pnative package -DskipTests
 
-    - name: Configure AWS Credentials
-      id: aws_auth
-      uses: aws-actions/configure-aws-credentials@v4
-      with:
-        role-to-assume: arn:aws:iam::${{ inputs.aws-account }}:role/Lambda-deploy 
-        aws-region: us-east-1
-    
-    - name: Install Dependencies
-      run: npm install
+      - uses: aws-actions/setup-sam@v2
 
-    - name: serverless deploy
-      uses: serverless/github-action@v3.2
-      with:
-        args: deploy --stage ${{ inputs.environment }}
-      env: # https://github.com/serverless/github-action
-        AWS_ACCESS_KEY_ID: ${{ env.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ env.AWS_SECRET_ACCESS_KEY }}
-
-    # - name: Zip Lambda functions
-    #   run: zip -j ${{matrix.lambda}}.zip ./${{matrix.lambda}}/index.js
-    # - name: Update Lambdas code
-    #   run: aws lambda update-function-code --function-name=${{matrix.lambda}}${{inputs.environment}} --zip-file=fileb://${{matrix.lambda}}.zip
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws-account }}:role/Lambda.Role
+          aws-region: us-east-1
+  
+      - name: Package
+        run: sam package --s3-bucket com.hoopladigital.lambda --s3-prefix hoopla-api-token --output-template-file packaged.yaml
+  
+      - name: Deploy
+        run: sam deploy --template-file packaged.yaml --region us-east-1 --config-file samconfig.toml
