@@ -32,4 +32,4 @@ jobs:
       role_name: arn:aws:iam::739153323366:role/Role
       region: us-east-1
       zip_path: ./artifacts/lambda-deploy.zip
-      function_name: python_workflow_test
+      function_name: python_workflow_test1
