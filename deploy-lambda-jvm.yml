@@ -1,0 +1,49 @@
+on:
+    workflow_call:
+      inputs:
+          environment:
+              required: true
+              type: string
+          aws-account:
+              required: true
+              type: string
+          function-name:
+              required: true
+              type: string
+          
+name: Deploy Lambda
+  
+jobs:
+  build:
+    name: Build Lambda
+    runs-on: ubuntu-latest
+  
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout Repo  
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          java-version-file: '.java-version'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Install dependencies
+        run: mvn clean install
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws-account }}:role/Lambda.Role
+          aws-region: us-east-1
+    
+      - name: Deploy Lambda function
+        run: |
+          zip -r function.zip target/*.jar
+          aws lambda update-function-code --function-name ${{ inputs.function-name }}${{inputs.environment}} --zip-file fileb://function.zip
