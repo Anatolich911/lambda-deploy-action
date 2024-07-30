@@ -18,7 +18,7 @@ jobs:
       - name: Build artifact
         run: |
           mkdir -p artifacts
-          mv lambda.zip artifacts/lambda-python.zip
+          mv lambda.zip artifacts/lambda-deploy.zip
       - name: Upload artifact
         uses: actions/upload-artifact@v3
         with:
