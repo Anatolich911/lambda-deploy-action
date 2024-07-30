@@ -26,18 +26,10 @@ jobs:
           path: artifacts/
 
   deploy-lambda:
-    runs-on: ubuntu-latest
     needs: build-lambda
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: lambda-artifact
-          path: ./artifact
-      - name: Deploy Lambda function
-        uses: ./.github/workflows/deploy-lambda.yml
-        with:
-          role_name: arn:aws:iam::870796784031:role/GitHubAction-AssumeRoleWithAction
-          region: eu-central-1
-          zip_path: ./lambda-python.zip
-          function_name: python_workflow_test
+    uses: ./.github/workflows/deploy-lambda.yml
+    with:
+      role_name: arn:aws:iam::870796784031:role/GitHubAction-AssumeRoleWithAction
+      region: eu-central-1
+      zip_path: ./artifacts/lambda-python.zip
+      function_name: python_workflow_test
