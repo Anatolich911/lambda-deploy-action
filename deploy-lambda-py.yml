@@ -1,0 +1,47 @@
+on:
+  workflow_call:
+    inputs:
+        environment:
+            required: true
+            type: string
+        aws-account:
+            required: true
+            type: string
+        function-name:
+            required: true
+            type: string
+        
+name: Deploy Lambda
+
+jobs:
+  build:
+    name: Build Lambda
+    runs-on: ubuntu-latest
+
+  
+    permissions:
+      contents: read
+      id-token: write
+  
+    steps:
+      - name: Checkout Repo  
+        uses: actions/checkout@v4
+ 
+      - name: Set up Python environment
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.8'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+  
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ inputs.aws-account }}:role/Lambda.Role
+          aws-region: us-east-1
+
+      - name: Deploy Lambda function
+        run: |
+          zip -r function.zip .
+          aws lambda update-function-code --function-name ${{ inputs.function-name }}${{inputs.environment}} --zip-file fileb://function.zip
