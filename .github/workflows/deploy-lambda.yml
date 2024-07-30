@@ -19,10 +19,6 @@ on:
         description: 'Lambda function name'
         required: true
         type: string
-      runtime:
-        description: 'Lambda function runtime'
-        required: true
-        type: string
 
 jobs:
   deploy:
@@ -52,6 +48,3 @@ jobs:
             --function-name "${{ inputs.function_name }}" \
             --zip-file "fileb://${{ inputs.zip_path }}" \
             --publish
-          aws lambda update-function-configuration \
-            --function-name "${{ inputs.function_name }}" \
-            --runtime "${{ inputs.runtime }}"

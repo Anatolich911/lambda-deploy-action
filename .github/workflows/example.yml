@@ -15,11 +15,15 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: reusable-lambda
+      - name: Build artifact
+        run: |
+          mv lambda.zip lambda-python.zip
+
   deploy-lambda:
+    needs: build-lambda
     uses: ./.github/workflows/deploy-lambda.yml
     with:
       role_name: arn:aws:iam::870796784031:role/GitHubAction-AssumeRoleWithAction
       region: eu-central-1
-      zip_path: ./lambda.zip
+      zip_path: ./lambda-python.zip
       function_name: python_workflow_test
-      runtime: nodejs16.x
