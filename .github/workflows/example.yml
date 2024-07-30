@@ -3,6 +3,10 @@ on:
     branches:
       - reusable-lambda
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   deploy-lambda:
     uses: ./.github/workflows/deploy-lambda.yml
