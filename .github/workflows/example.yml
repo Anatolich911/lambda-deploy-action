@@ -17,6 +17,7 @@ jobs:
           ref: reusable-lambda
       - name: Build artifact
         run: |
+          mkdir -p artifacts
           mv lambda.zip artifacts/lambda-python.zip
       - name: Upload artifact
         uses: actions/upload-artifact@v3
