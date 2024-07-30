@@ -1,0 +1,14 @@
+on:
+  push:
+    branches:
+      - reusable-lambda
+
+jobs:
+  deploy-lambda:
+    uses: ./.github/workflows/deploy-lambda.yml
+    with:
+      role_name: arn:aws:iam::870796784031:role/GitHubAction-AssumeRoleWithAction
+      region: us-east-1
+      zip_path: lambda.zip
+      function_name: lambda-function
+      runtime: nodejs16.x
